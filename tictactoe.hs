@@ -15,11 +15,12 @@ instance Show Board where
 
 initBoard = Grid3x3 "         "
 
+place :: Board -> Char -> Int -> Int -> Maybe Board
 place (Grid3x3 board) move row col =
   let pos = (row-1) * 3 + (col-1)
   in if (row < 1 || row > 3 || col < 1 || col > 3 || board !! pos /= ' ')
-     then error "invalid input"
-     else Grid3x3 (take pos board ++ [move] ++ drop (pos+1) board)
+     then Nothing
+     else Just $ Grid3x3 (take pos board ++ [move] ++ drop (pos+1) board)
 
 gameEnd (Grid3x3 board) =
   if verify board "XXX"
@@ -73,15 +74,23 @@ userInputStrategy move board = do
   case input of
     r:c:[] -> let row = ord r - ord '0'
                   col = ord c - ord '0'
-              in return $ place board move row col
-    _ -> error "invalid input"
+                  newBoard = place board move row col
+              in case newBoard of
+                   Nothing -> do
+                     putStrLn "Invalid Input"
+                     userInputStrategy move board
+                   Just newBoard' -> return newBoard'
+    _ -> do
+      putStrLn "Invalid Input"
+      userInputStrategy move board
 
 
 main = do
   putStrLn "Welcome to TicTacToe"
   gameLoop
     initBoard
-    (firstUnplayedStrategy 'X')
+    -- (firstUnplayedStrategy 'X')
+    (userInputStrategy 'X')
     -- (firstUnplayedStrategy 'O')
     (userInputStrategy 'O')
     Player1Turn
