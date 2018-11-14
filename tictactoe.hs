@@ -42,32 +42,32 @@ gameEnd (Grid3x3 board) =
     done board =
       and $ map (/=' ') board
 
-gameLoop :: IO Board -> (IO Board -> IO Board) -> (IO Board -> IO Board) -> Turn -> IO GameResult
-gameLoop ioBoard player1Strategy player2Strategy turn = do
-  board <- ioBoard
+gameLoop :: Board -> (Board -> IO Board) -> (Board -> IO Board) -> Turn -> IO GameResult
+gameLoop board player1Strategy player2Strategy turn = do
   print board
-  print turn
   case (gameEnd board, turn) of
-    (Unfinished, Player1Turn) ->
-      gameLoop (player1Strategy ioBoard) player1Strategy player2Strategy Player2Turn
-    (Unfinished, Player2Turn) ->
-      gameLoop (player2Strategy ioBoard) player1Strategy player2Strategy Player1Turn
+    (Unfinished, Player1Turn) -> do
+      print turn
+      newBoard <- player1Strategy board
+      gameLoop newBoard player1Strategy player2Strategy Player2Turn
+    (Unfinished, Player2Turn) -> do
+      print turn
+      newBoard <- player2Strategy board
+      gameLoop newBoard player1Strategy player2Strategy Player1Turn
     (result, _) -> do
       print result
       return result
 
-firstUnplayedStrategy :: Char -> (IO Board) -> (IO Board)
-firstUnplayedStrategy move ioBoard = do
+firstUnplayedStrategy :: Char -> Board -> (IO Board)
+firstUnplayedStrategy move (Grid3x3 board) = do
   -- putStrLn "I am first unplayed strategy"
-  (Grid3x3 board) <- ioBoard
   return $ Grid3x3 (firstUnplayed board)
   where firstUnplayed (' ' : tail) = move : tail
         firstUnplayed (h   : tail) = h : firstUnplayed tail
 
-userInputStrategy :: Char -> (IO Board) -> (IO Board)
-userInputStrategy move ioBoard = do
+userInputStrategy :: Char -> Board -> (IO Board)
+userInputStrategy move board = do
   -- putStrLn "I am user input strategy"
-  board <- ioBoard
   putStr "Play Board Position (input 2 digits, e.g. 11): "
   input <- getLine
   case input of
@@ -80,7 +80,7 @@ userInputStrategy move ioBoard = do
 main = do
   putStrLn "Welcome to TicTacToe"
   gameLoop
-    (return initBoard)
+    initBoard
     (firstUnplayedStrategy 'X')
     -- (firstUnplayedStrategy 'O')
     (userInputStrategy 'O')
