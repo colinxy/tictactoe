@@ -82,8 +82,8 @@ main = do
   gameLoop
     (return initBoard)
     (firstUnplayedStrategy 'X')
-    (firstUnplayedStrategy 'O')
-    -- (userInputStrategy 'O')
+    -- (firstUnplayedStrategy 'O')
+    (userInputStrategy 'O')
     Player1Turn
 
   putStr "\n\n"
