@@ -1,4 +1,5 @@
 import Data.Char (ord)
+import System.Random (randomRIO)
 
 
 data GameResult = XWin | OWin | Draw | Unfinished deriving Show
@@ -76,13 +77,26 @@ userInputStrategy move board = do
                   col = ord c - ord '0'
                   newBoard = place board move row col
               in case newBoard of
+                   Just newBoard' -> return newBoard'
                    Nothing -> do
                      putStrLn "Invalid Input"
                      userInputStrategy move board
-                   Just newBoard' -> return newBoard'
     _ -> do
       putStrLn "Invalid Input"
       userInputStrategy move board
+
+randomStrategy :: Char -> Board -> IO Board
+randomStrategy move board = do
+  row <- randomRIO (1, 3)
+  col <- randomRIO (1, 3)
+  case place board move row col of
+    Just newBoard -> return newBoard
+    Nothing -> randomStrategy move board
+
+bestStrategy :: Char -> Board -> (IO Board)
+bestStrategy move (Grid3x3 board) =
+  -- TODO
+  return (Grid3x3 board)
 
 
 main = do
@@ -90,9 +104,11 @@ main = do
   gameLoop
     initBoard
     -- (firstUnplayedStrategy 'X')
-    (userInputStrategy 'X')
+    -- (userInputStrategy 'X')
+    (randomStrategy 'X')
     -- (firstUnplayedStrategy 'O')
     (userInputStrategy 'O')
+    -- (randomStrategy 'O')
     Player1Turn
 
   putStr "\n\n"
